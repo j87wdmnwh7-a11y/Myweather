@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2563eb">
+  <title>Mein Wetter</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      padding: 20px; box-sizing: border-box; font-family: system-ui, sans-serif;
+      background: linear-gradient(160deg, #dbeafe, #eff6ff 55%, #f8fafc); color: #172554;
+    }
+    main {
+      width: min(100%, 380px); box-sizing: border-box; padding: 28px;
+      background: rgba(255,255,255,.9); border-radius: 28px;
+      box-shadow: 0 14px 40px rgba(30,64,175,.14); text-align: center;
+    }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    #place { color: #475569; margin: 0; }
+    #temp { font-size: 4.5rem; font-weight: 750; letter-spacing: -3px; margin: 16px 0 4px; }
+    #condition { font-size: 1.15rem; font-weight: 650; margin: 8px 0; }
+    #advice { color: #334155; line-height: 1.5; }
+    button { margin-top: 16px; border: 0; border-radius: 999px; padding: 13px 20px; background: #2563eb; color: white; font-size: 1rem; font-weight: 650; }
+    #status { min-height: 1.4em; margin-top: 14px; color: #64748b; font-size: .9rem; }
+    footer { margin-top: 18px; color: #64748b; font-size: .78rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🌤️ Mein Wetter</h1>
+    <p id="place">Magdeburg</p>
+    <div id="temp">--°</div>
+    <div id="condition">Temperatur wird geladen …</div>
+    <p id="advice">Einen Moment bitte.</p>
+    <button id="refresh">Temperatur aktualisieren</button>
+    <div id="status" role="status" aria-live="polite"></div>
+    <footer>Daten: Open-Meteo · Außentemperatur</footer>
+  </main>
+  <script>
+    async function ladeWetter() {
+      const status = document.getElementById("status");
+      status.textContent = "Lade aktuelle Wetterdaten …";
+      try {
+        const url = "https://api.open-meteo.com/v1/forecast?latitude=52.12&longitude=11.63&current=temperature_2m&timezone=Europe%2FBerlin";
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Wetterdienst nicht erreichbar");
+        const daten = await response.json();
+        const temperatur = daten.current.temperature_2m;
+        document.getElementById("temp").textContent = `${temperatur}°C`;
+        if (temperatur >= 13) {
+          document.getElementById("condition").textContent = "Mild genug";
+          document.getElementById("advice").textContent = "Es ist relativ warm – eine Jacke ist möglicherweise nicht nötig.";
+        } else {
+          document.getElementById("condition").textContent = "Eher kühl";
+          document.getElementById("advice").textContent = "Nimm lieber eine Jacke mit.";
+        }
+        status.textContent = `Zuletzt aktualisiert: ${new Date().toLocaleTimeString("de-DE", {hour: "2-digit", minute: "2-digit"})}`;
+      } catch (fehler) {
+        status.textContent = "Wetterdaten konnten nicht geladen werden. Prüfe die Internetverbindung und versuche es erneut.";
+        document.getElementById("condition").textContent = "Keine Daten";
+        document.getElementById("advice").textContent = "";
+      }
+    }
+    document.getElementById("refresh").addEventListener("click", ladeWetter);
+    ladeWetter();
+  </script>
+</body>
+</html>
